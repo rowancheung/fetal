@@ -7,7 +7,7 @@ import util
 import numpy as np
 import scipy.ndimage as sp
 
-# samples = pd.read_csv('slices.csv', index_col = 0)
+samples = pd.read_csv('slices.csv', index_col = 0)
 
 labelled_frames = {}
 
@@ -20,8 +20,8 @@ def get_frame_num(s):
   else:
     return '0' + s
 
-# for s in USABLE_SAMPLES:
-#   labelled_frames[s] = get_frame_num(int(samples.loc[s]['labeled frame']))
+for s in greater_95:
+  labelled_frames[s] = get_frame_num(int(samples.loc[s]['labeled frame']))
 
 g_truth_dir = '../../placenta_segmentation/data/labels'
 registration_dir = './registered/'
@@ -40,26 +40,26 @@ def dilate(mask, sample, iterations=4):
   return dil
 
 def register(sample):
-  # g_truth_frame = labelled_frames[sample]
+  g_truth_frame = labelled_frames[sample]
   all_frames = os.listdir(os.path.join(data_dir, sample))
 
   for i in range(len(all_frames)):
     all_frames[i] = os.path.join(os.path.join(data_dir, sample), all_frames[i])
 
-  mask1 = '{}/021218L/021218L_0180_all_brains.nii.gz'.format(g_truth_dir)
-  mask2 = '{}/021218L/021218L_0180.nii.gz'.format(seg_dir)
+  mask1 = '{}/{}/{}_{}_all_brains.nii.gz'.format(g_truth_dir, sample, sample, g_truth_frame)
+  mask2 = '{}/{}/{}_{}.nii.gz'.format(seg_dir, sample, sample, g_truth_frame)
   # mask1 = util.read_vol('../data/labels/021218L/021218L_0180_all_brains.nii.gz')
   # mask2 = util.read_vol('../data/data/021218L_0180.nii.gz')
   u = union(mask1, mask2)
   dil = dilate(u, sample)
-  commands = [command, registration_dir, len(all_frames), './registered/mask/021218L.nii.gz', '1', '0']
+  commands = [command, registration_dir + sample + '/', len(all_frames), './registered/mask/{}.nii.gz'.format(sample), '1', '0']
   back_commands = commands.copy()
-  prev_frames = all_frames[:int(180) + 1]
+  prev_frames = all_frames[:int(g_truth_frame) + 1]
   prev_frames.reverse()
   back_commands.extend(prev_frames)
-  commands.extend(all_frames[int(180):])
-  back_commands[2] = str(int(180))
-  commands[2] = str(len(all_frames) - int(180))
+  commands.extend(all_frames[int(g_truth_frame):])
+  back_commands[2] = str(int(g_truth_frame))
+  commands[2] = str(len(all_frames) - int(g_truth_frame))
   # print(commands)
   # print(back_commands)
   subprocess.run(back_commands)
@@ -116,11 +116,12 @@ def register_by_frame(sample):
 
 labelled = ['010918L',  '013018L', '013118S',  '021218S',  '022415',  '031317L',  '031615',  '032217',   '032318c',  '040218',  '040716',	'041818',	'050318L', '051215',   '052218S',  '052516',  '080117'
 ,'010918S',  '013018S',  '021015',   '022318L',  '022618',  '031317T',  '031616',  '032318a',  '032318d',  '040417',  '041017',	'043015',	'050318S', '051718L',  '052418L',  '061715',  '083115',
-'012115',	 '013118L',  '021218L',  '022318S',  '030315',  '031516',   '031716',  '032318b',  '032818',   '040617',  '041318S',	'043018',	'050917', '052218L',  '052418S',  '062515',  '102617']
+'012115',	 '013118L',  '022318S',  '030315',  '031516',   '031716',  '032318b',  '032818',   '040617',  '041318S',	'043018',	'050917', '052218L',  '052418S',  '062515',  '102617']
 
 # truth = util.read_vol('../data/labels/021218L/021218L_0180_all_brains.nii.gz')
 # seg = util.read_vol('../data/data/021218L_0180.nii.gz')
 # u = union(truth, seg)
 # dilation = dilate(u, '021218L')
 
-register('021218L')
+for sample in set(labelled).intersection(set(greater_95)):
+  register(sample)
