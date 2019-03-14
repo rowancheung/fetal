@@ -41,7 +41,7 @@ def dilate(mask, sample, iterations=4):
 
 def register(sample):
   g_truth_frame = labelled_frames[sample]
-  all_frames = os.listdir(os.path.join(data_dir, sample))
+  all_frames = sorted(os.listdir(os.path.join(data_dir, sample)))
 
   for i in range(len(all_frames)):
     all_frames[i] = os.path.join(os.path.join(data_dir, sample), all_frames[i])
