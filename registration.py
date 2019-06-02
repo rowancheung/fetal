@@ -1,6 +1,6 @@
 
 from constants import greater_95
-# import pandas as pd
+import pandas as pd
 import os
 import subprocess
 import util
@@ -27,7 +27,7 @@ g_truth_dir = '../../placenta_segmentation/data/labels'
 registration_dir = './registered/'
 data_dir = '../../placenta_segmentation/data/raw/'
 # data_dir = '../data/raw/'
-seg_dir = '../../placenta_segmentation/data/predict_cleaned'
+seg_dir = '../../placenta_segmentation/data/predict_cleaned/unet3000'
 command = '../ITK_4D/build/bin/TemporalRegistration_Rigid'
 
 def union(m1, m2):
@@ -46,12 +46,12 @@ def register(sample):
   for i in range(len(all_frames)):
     all_frames[i] = os.path.join(os.path.join(data_dir, sample), all_frames[i])
 
-  mask1 = '{}/{}/{}_{}_all_brains.nii.gz'.format(g_truth_dir, sample, sample, g_truth_frame)
-  mask2 = '{}/{}/{}_{}.nii.gz'.format(seg_dir, sample, sample, g_truth_frame)
+  #mask1 = util.read_vol('{}/{}/{}_{}_all_brains.nii.gz'.format(g_truth_dir, sample, sample, g_truth_frame))
+  mask2 = util.read_vol('{}/{}/{}_{}.nii.gz'.format(seg_dir, sample, sample, g_truth_frame))
   # mask1 = util.read_vol('../data/labels/021218L/021218L_0180_all_brains.nii.gz')
   # mask2 = util.read_vol('../data/data/021218L_0180.nii.gz')
-  u = union(mask1, mask2)
-  dil = dilate(u, sample)
+  #u = union(mask1, mask2)
+  dil = dilate(mask2, sample)
   commands = [command, registration_dir + sample + '/', len(all_frames), './registered/mask/{}.nii.gz'.format(sample), '1', '0']
   back_commands = commands.copy()
   prev_frames = all_frames[:int(g_truth_frame) + 1]
@@ -122,6 +122,6 @@ labelled = ['010918L',  '013018L', '013118S',  '021218S',  '022415',  '031317L',
 # seg = util.read_vol('../data/data/021218L_0180.nii.gz')
 # u = union(truth, seg)
 # dilation = dilate(u, '021218L')
-
-for sample in set(labelled).intersection(set(greater_95)):
+# 060118
+for sample in ['030315']:
   register(sample)
